@@ -1,13 +1,12 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication,QInputDialog,QDoubleSpinBox,QComboBox, QColorDialog,QLineEdit, QLabel, QPushButton, QVBoxLayout, QWidget,QRadioButton, QFileDialog, QGridLayout, QMainWindow,QDialog,QSpinBox,QFormLayout,QHBoxLayout
+from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox,QGraphicsScene, QGraphicsView,QSlider, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from PyQt5.QtGui import QPixmap,QCursor,QColor,QImage,QPen
+from PyQt5.QtCore import Qt,QTimer
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox,QGraphicsScene, QGraphicsView
-from PyQt5.QtWidgets import QSlider, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 
 # Load the UI files for the button window and main window
 button_ui_file = 'mybutton.ui'
@@ -657,10 +656,24 @@ class MainApp(QMainWindow):
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 
-        # Display the image
+        # Display the image with the x-axis and y-axis
         plt.imshow(img)
         plt.axis('on')
+        plt.xticks(range(0, img.shape[1], 50))
+        plt.yticks(range(0, img.shape[0], 50))
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
         plt.show(block=False)
+
+        # Wait for the user to close the window with the x-axis and y-axis
+        timer = QTimer()
+        timer.setInterval(100)
+        timer.timeout.connect(lambda: None)
+        timer.start()
+        plt.gcf().canvas.flush_events()
+        while plt.get_fignums():
+            QApplication.processEvents()
+        timer.stop()
 
         # Get user inputs for the text, font, color, size, and position
         text, ok = QInputDialog.getText(self, "Enter text", "Text:")
@@ -695,9 +708,6 @@ class MainApp(QMainWindow):
         # Display the image with the added text
         plt.imshow(img)
         plt.show()
-
-
-        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
