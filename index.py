@@ -1,12 +1,12 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication,QDoubleSpinBox,QComboBox, QColorDialog,QLineEdit, QLabel, QPushButton, QVBoxLayout, QWidget,QRadioButton, QFileDialog, QGridLayout, QMainWindow,QDialog,QSpinBox,QFormLayout,QHBoxLayout
-from PyQt5.QtGui import QPixmap,QCursor,QColor
+from PyQt5.QtWidgets import QApplication,QInputDialog,QDoubleSpinBox,QComboBox, QColorDialog,QLineEdit, QLabel, QPushButton, QVBoxLayout, QWidget,QRadioButton, QFileDialog, QGridLayout, QMainWindow,QDialog,QSpinBox,QFormLayout,QHBoxLayout
+from PyQt5.QtGui import QPixmap,QCursor,QColor,QImage,QPen
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox,QGraphicsScene, QGraphicsView
 from PyQt5.QtWidgets import QSlider, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 
 # Load the UI files for the button window and main window
@@ -118,7 +118,9 @@ class ThresholdDialog(QDialog):
 
     def get_threshold_value(self):
         return self.threshold_value_spinbox.value()
-    
+
+
+        
 class MainApp(QMainWindow):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
@@ -136,6 +138,7 @@ class MainApp(QMainWindow):
         self.blending_diff_size.clicked.connect(self.blending_diff_size_function)
         self.threshold.clicked.connect(self.threshold_function)
         self.brightness.clicked.connect(self.brightness_function)
+        self.put_text.clicked.connect(self.put_text_function)
         
     def before_resize_function(self):
         img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
@@ -644,7 +647,57 @@ class MainApp(QMainWindow):
         self.gamma_slider.setValue(int(value * 100))
         self.update_gamma_label(value *100)  # Update the gamma label with the current slider value
 
+    def put_text_function(self):
+        # Get the path of the image file
+        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path:
+            return
 
+        # Load the image
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+
+        # Display the image
+        plt.imshow(img)
+        plt.axis('on')
+        plt.show(block=False)
+
+        # Get user inputs for the text, font, color, size, and position
+        text, ok = QInputDialog.getText(self, "Enter text", "Text:")
+        if not ok:
+            return
+
+        font, ok = QInputDialog.getItem(self, "Select font", "Font:", ["FONT_HERSHEY_COMPLEX", "FONT_HERSHEY_SIMPLEX"])
+        if not ok:
+            return
+        font = getattr(cv2, font)
+
+        color = QColorDialog.getColor()
+        if not color.isValid():
+            return
+        color = (color.blue(), color.green(), color.red())  # OpenCV uses BGR format
+
+        size, ok = QInputDialog.getInt(self, "Enter size", "Size:", 1, 1, 10)
+        if not ok:
+            return
+
+        x, ok = QInputDialog.getInt(self, "Enter x-coordinate", "X-coordinate:", 0, 0, img.shape[1]-1)
+        if not ok:
+            return
+
+        y, ok = QInputDialog.getInt(self, "Enter y-coordinate", "Y-coordinate:", 0, 0, img.shape[0]-1)
+        if not ok:
+            return
+
+        # Add the text to the image
+        cv2.putText(img, text, (x, y), font, size, color, 2)
+
+        # Display the image with the added text
+        plt.imshow(img)
+        plt.show()
+
+
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

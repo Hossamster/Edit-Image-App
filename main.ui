@@ -2375,6 +2375,19 @@ PlotWidget {
      <string>Brightness</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="put_text">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>310</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Put Text</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
