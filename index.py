@@ -992,7 +992,7 @@ class MainApp(QMainWindow):
                         # create the histogram using seaborn
                         plt.figure(figsize = (12,10))
                         plt.subplot(2,2,1)
-                        plt.imshow(img_gray)
+                        plt.imshow(img_gray,'gray')
                         plt.title('Gray Image')
                         plt.subplot(2,2,2)
                         sns.distplot(flattened_img, kde=False ,rug=False)
