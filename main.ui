@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>887</width>
+    <width>891</width>
     <height>546</height>
    </rect>
   </property>
@@ -2236,8 +2236,8 @@ PlotWidget {
    <widget class="QPushButton" name="flip">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>170</y>
+      <x>60</x>
+      <y>240</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2249,8 +2249,8 @@ PlotWidget {
    <widget class="QPushButton" name="resize">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>170</y>
+      <x>270</x>
+      <y>240</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2284,8 +2284,8 @@ PlotWidget {
    <widget class="QPushButton" name="draw_rectangle">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>240</y>
+      <x>270</x>
+      <y>170</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2297,7 +2297,7 @@ PlotWidget {
    <widget class="QPushButton" name="gray_scale">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>480</x>
       <y>170</y>
       <width>161</width>
       <height>41</height>
@@ -2310,7 +2310,7 @@ PlotWidget {
    <widget class="QPushButton" name="hsv">
     <property name="geometry">
      <rect>
-      <x>670</x>
+      <x>690</x>
       <y>170</y>
       <width>161</width>
       <height>41</height>
@@ -2323,8 +2323,8 @@ PlotWidget {
    <widget class="QPushButton" name="blend2imgs">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>240</y>
+      <x>690</x>
+      <y>380</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2339,8 +2339,8 @@ PlotWidget {
    <widget class="QPushButton" name="blending_diff_size">
     <property name="geometry">
      <rect>
-      <x>470</x>
-      <y>240</y>
+      <x>480</x>
+      <y>380</y>
       <width>171</width>
       <height>41</height>
      </rect>
@@ -2352,8 +2352,8 @@ PlotWidget {
    <widget class="QPushButton" name="threshold">
     <property name="geometry">
      <rect>
-      <x>670</x>
-      <y>240</y>
+      <x>60</x>
+      <y>310</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2365,8 +2365,8 @@ PlotWidget {
    <widget class="QPushButton" name="brightness">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>310</y>
+      <x>480</x>
+      <y>240</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2378,8 +2378,8 @@ PlotWidget {
    <widget class="QPushButton" name="put_text">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>310</y>
+      <x>690</x>
+      <y>240</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2391,7 +2391,7 @@ PlotWidget {
    <widget class="QPushButton" name="blurring">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>270</x>
       <y>310</y>
       <width>161</width>
       <height>41</height>
@@ -2404,17 +2404,56 @@ PlotWidget {
    <widget class="QPushButton" name="gradient">
     <property name="geometry">
      <rect>
-      <x>670</x>
+      <x>690</x>
       <y>310</y>
       <width>161</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Gradient</string>
+     <string>Edge Detection</string>
     </property>
    </widget>
    <widget class="QPushButton" name="histogram">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>310</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Histogram</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="feature_matching">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>380</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Feature matching (SIFT)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="draw_circle">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>170</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Draw a Circle</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="morphological">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -2424,7 +2463,7 @@ PlotWidget {
      </rect>
     </property>
     <property name="text">
-     <string>Histogram</string>
+     <string>Morphological</string>
     </property>
    </widget>
   </widget>
@@ -2433,7 +2472,7 @@ PlotWidget {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>887</width>
+     <width>891</width>
      <height>30</height>
     </rect>
    </property>

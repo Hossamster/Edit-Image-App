@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication,QInputDialog,QDoubleSpinBox,QComboBox, QColorDialog,QLineEdit, QLabel, QPushButton, QVBoxLayout, QWidget,QRadioButton, QFileDialog, QGridLayout, QMainWindow,QDialog,QSpinBox,QFormLayout,QHBoxLayout
-from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox,QGraphicsScene, QGraphicsView,QSlider, QVBoxLayout, QHBoxLayout, QLabel, QWidget
+from PyQt5.QtWidgets import QMessageBox, QLineEdit,QDialog, QLabel, QComboBox, QSpinBox, QVBoxLayout, QDialogButtonBox,QGraphicsScene, QGraphicsView,QSlider, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from PyQt5.QtGui import QPixmap,QCursor,QColor,QImage,QPen
 from PyQt5.QtCore import Qt,QTimer
 import sys
@@ -153,7 +153,7 @@ class GradientDialog(QDialog):
 
         # Create the UI elements
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Laplacian","Sobel x", "Sobel y","Sobel x + Sobel y"])
+        self.comboBox.addItems(["Laplacian","Sobel x", "Sobel y","Sobel x + Sobel y","Canny edge detector"])
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.close)  # Connect the rejected signal to the close slot of the dialog
@@ -217,6 +217,31 @@ class Histogram_equalizationDialog(QDialog):
         # Return the selected technique
         return self.comboBox.currentText()
     
+
+class Morphologicals(QDialog):
+    def __init__(self, parent=None):
+        super(Morphologicals, self).__init__(parent)
+        self.setWindowTitle("Choose  technique")
+        self.setFixedSize(300, 100)  # Set a fixed size for the dialog
+
+        # Create the UI elements
+        self.comboBox = QComboBox()
+        self.comboBox.addItems(["Erosion", "Opening", "Closing","Dilation"])
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.close)  # Connect the rejected signal to the close slot of the dialog
+
+        # Lay out the UI elements
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Select blurring technique:"))
+        layout.addWidget(self.comboBox)
+        layout.addWidget(self.buttonBox)
+        self.setLayout(layout)
+
+    def getSelectedTechnique(self):
+        # Return the selected technique
+        return self.comboBox.currentText()  
+    
 class MainApp(QMainWindow):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
@@ -238,6 +263,9 @@ class MainApp(QMainWindow):
         self.blurring.clicked.connect(self.blurring_function)
         self.gradient.clicked.connect(self.gradient_function)
         self.histogram.clicked.connect(self.histogram_function)
+        self.feature_matching.clicked.connect(self.feature_matching_function)
+        self.draw_circle.clicked.connect(self.before_draw_circle)
+        self.morphological.clicked.connect(self.morphological_fn)
         
     def before_resize_function(self):
         img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
@@ -246,6 +274,18 @@ class MainApp(QMainWindow):
         # Get the size of the selected image
         img = cv2.imread(img_path)
         size = "{}x{}".format(img.shape[1], img.shape[0])
+        
+        plt.imshow(img)
+        plt.show()
+        # Wait for the user to close the window with the x-axis and y-axis
+        timer = QTimer()
+        timer.setInterval(100)
+        timer.timeout.connect(lambda: None)
+        timer.start()
+        plt.gcf().canvas.flush_events()
+        while plt.get_fignums():
+            QApplication.processEvents()
+        timer.stop()
         # Create the resize dialog
         dialog = ResizeDialog(self)
         dialog.setWindowTitle("Resize Image")
@@ -337,21 +377,61 @@ class MainApp(QMainWindow):
 
 
     def before_draw_rectangle(self):
-        # Get the path of the image file
-        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
-        if not img_path:
-            return
+        # Create a QDialog to get input from the user
+        options_dialog = QDialog()
+        options_dialog.setWindowTitle("Select Drawing Options")
+        options_dialog.resize(250, 150)
 
-        # Load the image
-        img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # Create radio buttons for the drawing options
+        image_radio = QRadioButton("Draw on Image")
+        whiteboard_radio = QRadioButton("Draw on Whiteboard")
+        coord_radio = QRadioButton("Enter Coordinates")
 
-        # Get the size of the image
-        img_size = "{} x {}".format(img.shape[1], img.shape[0])
+        # Set the image radio button as the default option
+        coord_radio.setChecked(True)
 
+        # Create OK button to confirm options
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(options_dialog.accept)
+
+        # Add the radio buttons and OK button to a layout
+        layout = QVBoxLayout()
+        layout.addWidget(image_radio)
+        layout.addWidget(whiteboard_radio)
+        layout.addWidget(coord_radio)
+        layout.addWidget(ok_button)
+
+        # Set the layout and show the dialog
+        options_dialog.setLayout(layout)
+        options_result = options_dialog.exec_()
+
+        # Determine which option was selected and call the appropriate function
+        if options_result == QDialog.Accepted:
+            if image_radio.isChecked():
+                # Get the path of the image file
+                img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+                if not img_path:
+                    return
+
+                # Load the image
+                img = cv2.imread(img_path)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+                # Show the image
+                # plt.imshow(img)
+                # plt.axis('off')
+                # plt.show()
+                self.rectangle_on_image(img)
+            elif whiteboard_radio.isChecked():
+                self.rectangle_on_white_board()
+            elif coord_radio.isChecked():
+                self.get_coordinates()
+            
+
+    def get_coordinates(self):
         # Create a QDialog to get input from the user
         rect_dialog = QDialog()
-        rect_dialog.setWindowTitle("Enter coordinates")
+        rect_dialog.setWindowTitle("Enter Coordinates")
         rect_dialog.resize(250, 250)
 
         # Create line edits for the coordinates
@@ -366,7 +446,7 @@ class MainApp(QMainWindow):
 
         # Create OK button to confirm coordinates
         ok_button = QPushButton("OK")
-        ok_button.clicked.connect(lambda: self.draw_rectangle_function(img, x1_edit.text(), y1_edit.text(), x2_edit.text(), y2_edit.text(), color_combo.currentText()))
+        ok_button.clicked.connect(lambda: self.draw_rectangle_function(x1_edit.text(), y1_edit.text(), x2_edit.text(), y2_edit.text(), color_combo.currentText()))
         ok_button.clicked.connect(rect_dialog.accept)  # Add this line to close the dialog on OK button click
 
         # Add labels, line edits, color combo box, and OK button to a layout
@@ -378,13 +458,12 @@ class MainApp(QMainWindow):
         layout.addWidget(x2_edit, 1, 1)
         layout.addWidget(y2_edit, 1, 2)
         layout.addWidget(color_combo, 2, 0, 1, 3)
-        layout.addWidget(QLabel("Image Size: {}".format(img_size)), 3, 0, 1, 3)
         layout.addWidget(ok_button, 4, 1)
 
         # Set the layout and show the dialog
         rect_dialog.setLayout(layout)
         rect_dialog.exec_()
-
+        
     def draw_rectangle_function(self, img, x1, y1, x2, y2, color):
         # Convert string inputs to integer values
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
@@ -416,6 +495,91 @@ class MainApp(QMainWindow):
         plt.imshow(rect_img)
         plt.axis('off')
         plt.show()
+        
+    def rectangle_on_white_board(self):
+        pt1 = (0,0)
+        pt2 = (0,0)
+        topleft_clicked = False
+        botright_clicked = False
+        frame = np.ones((512,512,3),)*255 
+        def draw_rectangle(event,x,y,flags,params):
+            nonlocal pt1,pt2,topleft_clicked,botright_clicked
+            if event == cv2.EVENT_LBUTTONDOWN:
+                # reset the rectangle 
+                if topleft_clicked and botright_clicked:
+                    pt1 = (0,0)
+                    pt2 = (0,0)
+                    topleft_clicked = False
+                    botright_clicked = False
+                
+                if topleft_clicked == False:
+                    pt1= (x,y)
+                    topleft_clicked = True
+                
+                elif botright_clicked == False:
+                    pt2 = (x,y)
+                    botright_clicked = True    
+
+        cv2.namedWindow('Test')
+        cv2.setMouseCallback('Test',draw_rectangle)
+
+        while True:
+            
+            
+            if topleft_clicked:
+                cv2.circle(frame,pt1,radius=5,color = (0,0,255),thickness=-1)
+                
+            if topleft_clicked and botright_clicked:
+                cv2.rectangle(frame,pt1,pt2,(0,0,255),3)  
+            
+            cv2.imshow('Test',frame)
+            if cv2.waitKey(1) & 0XFF == ord('q'):
+                break
+        cv2.destroyAllWindows()
+
+    def rectangle_on_image(self,img):
+        frame  = img.copy()
+        frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+        pt1 = (0,0)
+        pt2 = (0,0)
+        topleft_clicked = False
+        rightbot_clicked = False
+
+        def draw_rectangle(event,x,y,flags,params):
+            nonlocal pt1,pt2,topleft_clicked,rightbot_clicked
+            if event == cv2.EVENT_LBUTTONDOWN:
+                if topleft_clicked & rightbot_clicked:
+                    pt1 = (0,0)
+                    pt2 = (0,0)
+                    topleft_clicked = False
+                    rightbot_clicked = False
+                if not topleft_clicked:
+                    pt1 = (x,y)
+                    topleft_clicked = True
+                    print('topleft_clicked is true')
+                elif rightbot_clicked == False:
+                    pt2 = (x,y)
+                    rightbot_clicked = True
+                    print('rightbot_clicked is true')
+
+
+        cv2.namedWindow('frame')
+        cv2.setMouseCallback('frame',draw_rectangle)
+
+        while True:
+            
+            if topleft_clicked:
+                cv2.circle(frame,pt1,2,(255,0,2),-1)
+            if rightbot_clicked:
+                cv2.rectangle(frame,pt1,pt2,(255,0,0),3)
+            cv2.imshow('frame',frame)
+            
+            # Wait for any key event for a very short time (1ms)
+            # If any key is pressed, the loop will exit
+            if cv2.waitKey(1) != -1:
+                break
+
+        cv2.destroyAllWindows()
 
     def gray_scale_function(self):
         # Get the path of the image file
@@ -870,8 +1034,8 @@ class MainApp(QMainWindow):
 
         # Load the image
         img = cv2.imread(img_path)
+        new_img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        
         # Show the Gradient technique dialog
         dialog = GradientDialog(self)
         if dialog.exec_() == QDialog.Accepted:
@@ -928,6 +1092,27 @@ class MainApp(QMainWindow):
                 plt.subplot(1,2,2)
                 plt.imshow(laplacian,'gray')
                 plt.title(f'Result by {technique}',fontsize = 17)
+                plt.show()
+            elif technique == "Canny edge detector":
+                blurred_img = cv2.blur(img,ksize=(5,5))
+                med_val = np.median(img)
+                # Lower threshold to either 0 or 70% of the median value whichever is greater
+                lower = int(max(0,0.7*med_val))
+                # upper threshold to either 255 or 130% of the median value whichever is smaller
+                upper = int(min(255,1.3*med_val))
+                edges = cv2.Canny(image=blurred_img, threshold1=lower , threshold2=upper)
+                # Display the result
+                plt.figure(figsize = (14,8))
+                plt.subplot(1,3,1)
+                plt.imshow(new_img)
+                plt.title('Original image',fontsize = 17)
+                plt.subplot(1,3,2)
+                plt.imshow(blurred_img,cmap = 'gray')
+                plt.title('Blurred image',fontsize = 17)
+                plt.subplot(1,3,3)
+                plt.imshow(edges,cmap = 'gray')
+                plt.title(f'Result by {technique}',fontsize = 17)
+                plt.tight_layout()
                 plt.show()
         else:
             # User pressed "Cancel", don't perform any blurring
@@ -1050,7 +1235,380 @@ class MainApp(QMainWindow):
             # User pressed "Cancel", don't perform any blurring
             return
         
+    def feature_matching_function(self):
+        # Get the path of the image file
+        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path:
+            return
 
+        # Load the image
+        img1 = cv2.imread(img_path)
+        # convert the image to RGB
+        img_rgb1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        # convert the image to grayscale
+        img1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
+        
+        # Get the path of the image file
+        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path:
+            return
+
+        # Load the image
+        img2 = cv2.imread(img_path)
+        # convert the image to RGB
+        img_rgb2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
+        # convert the image to grayscale
+        img2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+        
+        # Initiate SIFT detector
+        sift = cv2.xfeatures2d.SIFT_create()
+
+        # find the keypoints and descriptors with SIFT
+        kp1, des1 = sift.detectAndCompute(img1,None)
+        kp2, des2 = sift.detectAndCompute(img2,None)
+
+        # FLANN parameters
+        FLANN_INDEX_KDTREE = 0
+        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+        search_params = dict(checks=50)  
+
+        flann = cv2.FlannBasedMatcher(index_params,search_params)
+
+        matches = flann.knnMatch(des1,des2,k=2)
+
+        # Need to draw only good matches, so create a mask
+        matchesMask = [[0,0] for i in range(len(matches))]
+
+        # ratio test
+        for i,(match1,match2) in enumerate(matches):
+            if match1.distance < 0.7*match2.distance:
+                matchesMask[i]=[1,0]
+
+        draw_params = dict(matchColor = (0,255,0),
+                        singlePointColor = (255,0,0),
+                        matchesMask = matchesMask,
+                        flags = 0)
+
+        flann_matches = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,None,flags=2)
+        
+        
+         
+        MIN_MATCH_COUNT = 8
+        good = []
+        for m,n in matches:
+            if m.distance < 0.7*n.distance:
+                good.append(m)
+                
+                
+        if len(good)>MIN_MATCH_COUNT:
+            src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+            dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+            matchesMask = mask.ravel().tolist()
+
+            h,w = img1.shape
+            pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+            dst = cv2.perspectiveTransform(pts,M)
+            
+            # Perspective transform
+            # h, w = img1.shape
+            # pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
+            # dst = cv2.perspectiveTransform(pts, M)
+
+            img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+            x = float(img2.shape[1]/4)
+            y = float(img2.shape[0]+120)
+            
+            plt.figure(figsize = (12,8))
+            plt.subplot(2,1,1)
+            plt.imshow(flann_matches)
+            plt.subplot(2,1,2)
+            plt.imshow(img2,'gray')
+            plt.show()
+        else:
+            plt.text(0.1,0.53, "Not enough features found",fontsize =  44,color = 'red')
+            plt.show()
+    
+    
+        
+    def before_draw_circle(self):
+        # Create a QDialog to get input from the user
+        options_dialog = QDialog()
+        options_dialog.setWindowTitle("Select Drawing Options")
+        options_dialog.resize(250, 150)
+
+        # Create radio buttons for the drawing options
+        image_radio = QRadioButton("Draw on Image")
+        whiteboard_radio = QRadioButton("Draw on Whiteboard")
+        coord_radio = QRadioButton("Enter Coordinates")
+
+        # Set the image radio button as the default option
+        coord_radio.setChecked(True)
+
+        # Create OK button to confirm options
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(options_dialog.accept)
+
+        # Add the radio buttons and OK button to a layout
+        layout = QVBoxLayout()
+        layout.addWidget(image_radio)
+        layout.addWidget(whiteboard_radio)
+        layout.addWidget(coord_radio)
+        layout.addWidget(ok_button)
+
+        # Set the layout and show the dialog
+        options_dialog.setLayout(layout)
+        options_result = options_dialog.exec_()
+
+        # Determine which option was selected and call the appropriate function
+        if options_result == QDialog.Accepted:
+            if image_radio.isChecked():
+                # Get the path of the image file
+                img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+                if not img_path:
+                    return
+
+                # Load the image
+                img = cv2.imread(img_path)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+                # Show the image
+                # plt.imshow(img)
+                # plt.axis('off')
+                # plt.show()
+                self.circle_on_image(img)
+            elif whiteboard_radio.isChecked():
+
+                self.circle_on_white_board()
+            elif coord_radio.isChecked():
+                # Get the path of the image file
+                img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+                if not img_path:
+                    return
+
+                # Load the image
+                img = cv2.imread(img_path)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                 
+                 
+                self.get_coordinates_circle(img)
+            
+
+    def get_coordinates_circle(self,img):
+        # Wait for the user to close the window with the x-axis and y-axis
+        plt.imshow(img)
+        plt.show()
+        timer = QTimer()
+        timer.setInterval(100)
+        timer.timeout.connect(lambda: None)
+        timer.start()
+        plt.gcf().canvas.flush_events()
+        while plt.get_fignums():
+            QApplication.processEvents()
+        timer.stop()
+        # Create a QDialog to get input from the user
+        rect_dialog = QDialog()
+        rect_dialog.setWindowTitle("Enter Coordinates")
+        rect_dialog.resize(250, 250)
+
+        # Create line edits for the coordinates
+        x1_edit = QLineEdit()
+        y1_edit = QLineEdit()
+        x2_edit = QLineEdit()
+        
+
+        # Create a combo box for color selection
+        color_combo = QComboBox()
+        color_combo.addItems(["Blue", "Red", "White", "Green", "Custom"])
+
+        # Create OK button to confirm coordinates
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(lambda: self.draw_circle_function(img,x1_edit.text(), y1_edit.text(), x2_edit.text(), color_combo.currentText()))
+        ok_button.clicked.connect(rect_dialog.accept)  # Add this line to close the dialog on OK button click
+
+        # Add labels, line edits, color combo box, and OK button to a layout
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Center (x,y)"), 0, 0)
+        layout.addWidget(x1_edit, 0, 1)
+        layout.addWidget(y1_edit, 0, 2)
+        layout.addWidget(QLabel("radius (x,y)"), 1, 0)
+        layout.addWidget(x2_edit, 1, 1)
+        
+        layout.addWidget(color_combo, 2, 0, 1, 3)
+        layout.addWidget(ok_button, 4, 1)
+
+        # Set the layout and show the dialog
+        rect_dialog.setLayout(layout)
+        rect_dialog.exec_()
+        
+    def draw_circle_function(self, img,x1, y1, x2, color):
+        # # Get the path of the image file
+        # img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        # if not img_path:
+        #     return
+
+        # # Load the image
+        # img = cv2.imread(img_path)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Convert string inputs to integer values
+        x1, y1, x2= int(x1), int(y1), int(x2)
+
+        # Get the color for the rectangle
+        if color == "Blue":
+            rect_color = (255, 0, 0)  # Blue
+        elif color == "Red":
+            rect_color = (0, 0, 255)  # Red
+        elif color == "White":
+            rect_color = (255, 255, 255)  # White
+        elif color == "Green":
+            rect_color = (0, 255, 0)  # Green
+        elif color == "Custom":
+            # Open a color picker dialog to choose a custom color
+            custom_color = QColorDialog.getColor()
+            if custom_color.isValid():
+                
+                rect_color = custom_color.getRgb()[:3]
+            else:
+            # If the user cancels the color picker dialog, use white as default
+                rect_color = (255, 255, 255)
+
+        
+        
+        # Draw a rectangle on the image
+        rect_img = img.copy()
+        cv2.circle(rect_img, (x1, y1),x2, rect_color, 2)
+
+        # Show the image
+        plt.imshow(rect_img)
+        plt.axis('off')
+        plt.show()
+        
+    def circle_on_white_board(self):
+        img = np.ones((512,512,3),)*255      
+        frame = img.copy()      
+        clicked = False
+        pt = (0,0)
+        def draw_circle(event,x,y,flags,params):
+            nonlocal clicked,pt
+            if event == cv2.EVENT_LBUTTONDOWN:
+                clicked = True
+                pt = (x,y)
+            
+
+        cv2.namedWindow('frame')
+        cv2.setMouseCallback('frame',draw_circle)
+
+        while True:
+            
+            
+            if clicked:
+                cv2.circle(frame,pt,10,(255,0,0),2)
+            cv2.imshow('frame',frame)
+            
+            if cv2.waitKey(10) & 0XFF == ord('q'):
+                break
+            
+        cv2.destroyAllWindows()
+
+    def circle_on_image(self,img):
+        # # Get the path of the image file
+        # img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        # if not img_path:
+        #     return
+
+        # # Load the image
+        # img = cv2.imread(img_path)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        frame  = img.copy()
+        frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+        clicked = False
+        pt = (0,0)
+        def draw_circle(event,x,y,flags,params):
+            nonlocal clicked,pt
+            if event == cv2.EVENT_LBUTTONDOWN:
+                clicked = True
+                pt = (x,y)
+
+        cv2.namedWindow('frame')
+        cv2.setMouseCallback('frame',draw_circle)
+
+        while True:
+            
+            if clicked:
+                cv2.circle(frame,pt,10,(255,0,0),2)
+            cv2.imshow('frame',frame)
+            
+            if cv2.waitKey(10) & 0XFF == ord('q'):
+                break
+
+        cv2.destroyAllWindows()
+        
+    def morphological_fn(self):      
+        
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Select an option")
+        msg_box.setText("Do you want to browse for an image or enter a string?")
+        browse_button = msg_box.addButton("Browse", QMessageBox.ActionRole)
+        enter_string_button = msg_box.addButton("Enter a string", QMessageBox.ActionRole)
+
+        msg_box.exec_()
+        if msg_box.clickedButton() == browse_button:
+            # User wants to browse for an image
+            img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+            if not img_path:
+                return
+            img = cv2.imread(img_path)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = img_rgb.copy()
+        elif msg_box.clickedButton() == enter_string_button:
+            # User wants to enter a string
+            text, ok = QInputDialog.getText(self, "Enter Text", "Enter the text:")
+            if not ok:
+                return
+            def load_img(string):
+                blank_img = np.zeros((600, 600))
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(blank_img, text=string, org=(50, 300), fontFace=font, fontScale=5, color=(255, 255, 255), thickness=25, lineType=cv2.LINE_AA)
+                return blank_img
+
+            img = load_img(text)
+            img_rgb = img.copy()
+        else:
+            # User pressed "Cancel", don't perform any operation
+            return
+
+        # Show the technique dialog
+        kernel = np.ones((5,5),np.uint8)
+        dialog = Morphologicals(self)
+        if dialog.exec_() == QDialog.Accepted:
+            # Apply the selected technique
+            technique = dialog.getSelectedTechnique()
+            if technique == "Erosion":
+                img = cv2.erode(img,kernel,iterations = 1)
+            elif technique == "Dilation":
+                img = cv2.morphologyEx(img,cv2.MORPH_GRADIENT,kernel)
+            elif technique == "Opening":
+                img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+            elif technique == "Closing":
+                img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+        else:
+            # User pressed "Cancel", don't perform any operation
+            return
+
+        # Display the result
+        plt.figure(figsize = (10,5))
+        plt.subplot(1,2,1)
+        plt.imshow(img_rgb,'gray')
+        plt.title('Original image',fontsize = 17)
+        plt.subplot(1,2,2)
+        plt.imshow(img,'gray')
+        plt.title(f'Result by {technique}',fontsize = 17)
+        plt.show()
+
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     button_window = ButtonWindow()
