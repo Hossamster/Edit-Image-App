@@ -35,6 +35,7 @@ You can then apply various image processing techniques on the selected image usi
 - **Draw a circle or a rectangle**
 - **Morphological Operations**
 - **Blending Images**
+- **etc**
 
 ### Developers
 - **Hossam Hassan 180871**
