@@ -14,7 +14,7 @@
 <p>To use this application, follow the steps below:
 
 Clone this repository using git clone https://github.com/Hossamster/Edit-Image-App.git command.
-Navigate to the cloned directory using cd your_project_name.
+Navigate to the cloned directory using cd Edit-Image-App.
 Install the required packages using the following command: pip install -r requirements.txt.
 Run the application by running the following command: python main.py.
 Click on the "Open Image" button to select an image.
@@ -35,6 +35,7 @@ You can then apply various image processing techniques on the selected image usi
 - **Draw a circle or a rectangle**
 - **Morphological Operations**
 - **Blending Images**
+- **etc**
 
 ### Developers
 - **Hossam Hassan 180871**
