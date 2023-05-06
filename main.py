@@ -273,6 +273,7 @@ class MainApp(QMainWindow):
             return
         # Get the size of the selected image
         img = cv2.imread(img_path)
+        img = (cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
         size = "{}x{}".format(img.shape[1], img.shape[0])
         
         plt.imshow(img)
@@ -1068,20 +1069,22 @@ class MainApp(QMainWindow):
                 sobely = cv2.Sobel(img,cv2.CV_64F,0,1,ksize = 5)
                 
                  # Display the result
-                plt.figure(figsize = (10,5))
-                plt.subplot(1,4,1)
-                plt.imshow(img,'gray')
-                plt.title('Original image',fontsize = 17)
-                plt.subplot(1,4,2)
-                plt.imshow(sobelx)
-                plt.title('Sobel x',fontsize = 17)
-                plt.subplot(1,4,3)
-                plt.imshow(sobely)
-                plt.title('Sobel y',fontsize = 17)
-                plt.subplot(1,2,2)
-                plt.imshow(sobelx+sobely,'gray')
-                plt.title(f'Result by {technique}',fontsize = 17)
+                plt.figure(figsize=(12, 8))
+                plt.subplot(2, 2, 1)
+                plt.imshow(img, 'gray')
+                plt.title('Original image', fontsize=17)
+                plt.subplot(2, 2, 2)
+                plt.imshow(sobelx, 'gray')
+                plt.title('Sobel x', fontsize=17)
+                plt.subplot(2, 2, 3)
+                plt.imshow(sobely, 'gray')
+                plt.title('Sobel y', fontsize=17)
+                plt.subplot(2, 2, 4)
+                plt.imshow(sobelx + sobely, 'gray')
+                plt.title(f'Result by {technique}', fontsize=17)
+                plt.tight_layout()
                 plt.show()
+
             elif technique == "Laplacian":
                 laplacian = cv2.Laplacian(img,cv2.CV_64F)
                 # Display the result
