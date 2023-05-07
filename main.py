@@ -1239,68 +1239,64 @@ class MainApp(QMainWindow):
             return
         
     def feature_matching_function(self):
-        # Get the path of the image file
-        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
-        if not img_path:
+        # Get the path of the first image file
+        img_path1, _ = QFileDialog.getOpenFileName(self, "Open Image 1", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path1:
             return
 
-        # Load the image
-        img1 = cv2.imread(img_path)
+        # Load the first image
+        img1 = cv2.imread(img_path1)
         # convert the image to RGB
         img_rgb1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
         # convert the image to grayscale
-        img1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-        
-        # Get the path of the image file
-        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
-        if not img_path:
+        img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+
+        # Get the path of the second image file
+        img_path2, _ = QFileDialog.getOpenFileName(self, "Open Image 2", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path2:
             return
 
-        # Load the image
-        img2 = cv2.imread(img_path)
+        # Load the second image
+        img2 = cv2.imread(img_path2)
         # convert the image to RGB
         img_rgb2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
         # convert the image to grayscale
-        img2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
-        
+        img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
         # Initiate SIFT detector
         sift = cv2.xfeatures2d.SIFT_create()
 
         # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(img1,None)
-        kp2, des2 = sift.detectAndCompute(img2,None)
+        kp1, des1 = sift.detectAndCompute(img1_gray, None)
+        kp2, des2 = sift.detectAndCompute(img2_gray, None)
 
         # FLANN parameters
         FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        search_params = dict(checks=50)  
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
 
-        flann = cv2.FlannBasedMatcher(index_params,search_params)
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-        matches = flann.knnMatch(des1,des2,k=2)
+        matches = flann.knnMatch(des1, des2, k=2)
 
         # Need to draw only good matches, so create a mask
-        matchesMask = [[0,0] for i in range(len(matches))]
+        matchesMask = [[0, 0] for i in range(len(matches))]
 
         # ratio test
-        for i,(match1,match2) in enumerate(matches):
-            if match1.distance < 0.7*match2.distance:
-                matchesMask[i]=[1,0]
-
-        draw_params = dict(matchColor = (0,255,0),
-                        singlePointColor = (255,0,0),
-                        matchesMask = matchesMask,
-                        flags = 0)
-
-        flann_matches = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,None,flags=2)
-        
-        
-         
-        MIN_MATCH_COUNT = 8
         good = []
-        for m,n in matches:
-            if m.distance < 0.7*n.distance:
-                good.append(m)
+        for i, (match1, match2) in enumerate(matches):
+            if match1.distance < 0.7 * match2.distance:
+                matchesMask[i] = [1, 0]
+                good.append(match1)
+
+        draw_params = dict(matchColor=(0, 255, 0),
+                        singlePointColor=(255, 0, 0),
+                        matchesMask=matchesMask,
+                        flags=0)
+
+        flann_matches = cv2.drawMatchesKnn(img1_gray, kp1, img2_gray, kp2, matches, None, **draw_params)
+        
+        MIN_MATCH_COUNT = 8
                 
                 
         if len(good)>MIN_MATCH_COUNT:
@@ -1310,16 +1306,12 @@ class MainApp(QMainWindow):
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
             matchesMask = mask.ravel().tolist()
 
-            h,w = img1.shape
+            h, w = img1.shape[:2]
+
             pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
             dst = cv2.perspectiveTransform(pts,M)
-            
-            # Perspective transform
-            # h, w = img1.shape
-            # pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
-            # dst = cv2.perspectiveTransform(pts, M)
 
-            img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+            img2_gray = cv2.polylines(img2_gray,[np.int32(dst)],True,255,3, cv2.LINE_AA)
             x = float(img2.shape[1]/4)
             y = float(img2.shape[0]+120)
             
@@ -1327,14 +1319,13 @@ class MainApp(QMainWindow):
             plt.subplot(2,1,1)
             plt.imshow(flann_matches)
             plt.subplot(2,1,2)
-            plt.imshow(img2,'gray')
+            plt.imshow(img2_gray,'gray')
             plt.show()
         else:
             plt.text(0.1,0.53, "Not enough features found",fontsize =  44,color = 'red')
             plt.show()
-    
-    
         
+ 
     def before_draw_circle(self):
         # Create a QDialog to get input from the user
         options_dialog = QDialog()
