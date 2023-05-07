@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>891</width>
-    <height>546</height>
+    <width>928</width>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -2236,7 +2236,7 @@ PlotWidget {
    <widget class="QPushButton" name="flip">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>480</x>
       <y>240</y>
       <width>161</width>
       <height>41</height>
@@ -2269,7 +2269,7 @@ PlotWidget {
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>10</y>
+      <y>20</y>
       <width>671</width>
       <height>121</height>
      </rect>
@@ -2278,7 +2278,7 @@ PlotWidget {
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>logo.png</pixmap>
+     <pixmap>C:/Users/Hossam/Desktop/training/logo.png</pixmap>
     </property>
    </widget>
    <widget class="QPushButton" name="draw_rectangle">
@@ -2320,39 +2320,10 @@ PlotWidget {
      <string>HSV Colors</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="blend2imgs">
-    <property name="geometry">
-     <rect>
-      <x>690</x>
-      <y>380</y>
-      <width>161</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The two images should be equal in size or we will take the highest size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-    </property>
-    <property name="text">
-     <string>Blend two images (equal sizes)</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="blending_diff_size">
-    <property name="geometry">
-     <rect>
-      <x>480</x>
-      <y>380</y>
-      <width>171</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Blend two images (different sizes)</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="threshold">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>480</x>
       <y>310</y>
       <width>161</width>
       <height>41</height>
@@ -2365,8 +2336,8 @@ PlotWidget {
    <widget class="QPushButton" name="brightness">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>240</y>
+      <x>270</x>
+      <y>310</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2378,8 +2349,8 @@ PlotWidget {
    <widget class="QPushButton" name="put_text">
     <property name="geometry">
      <rect>
-      <x>690</x>
-      <y>240</y>
+      <x>60</x>
+      <y>310</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2391,8 +2362,8 @@ PlotWidget {
    <widget class="QPushButton" name="blurring">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>310</y>
+      <x>690</x>
+      <y>240</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2404,8 +2375,8 @@ PlotWidget {
    <widget class="QPushButton" name="gradient">
     <property name="geometry">
      <rect>
-      <x>690</x>
-      <y>310</y>
+      <x>60</x>
+      <y>380</y>
       <width>161</width>
       <height>41</height>
      </rect>
@@ -2417,7 +2388,7 @@ PlotWidget {
    <widget class="QPushButton" name="histogram">
     <property name="geometry">
      <rect>
-      <x>480</x>
+      <x>690</x>
       <y>310</y>
       <width>161</width>
       <height>41</height>
@@ -2430,7 +2401,7 @@ PlotWidget {
    <widget class="QPushButton" name="feature_matching">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>480</x>
       <y>380</y>
       <width>161</width>
       <height>41</height>
@@ -2456,7 +2427,7 @@ PlotWidget {
    <widget class="QPushButton" name="morphological">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>270</x>
       <y>380</y>
       <width>161</width>
       <height>41</height>
@@ -2466,13 +2437,42 @@ PlotWidget {
      <string>Morphological</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="compression">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>240</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Compression</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="blending">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>380</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The two images should be equal in size or we will take the highest size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>Blending images</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>891</width>
+     <width>928</width>
      <height>30</height>
     </rect>
    </property>

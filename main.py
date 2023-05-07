@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import cv2
-
+import os
 # Load the UI files for the button window and main window
 button_ui_file = 'mybutton.ui'
 main_ui_file = 'main.ui'
@@ -233,7 +233,7 @@ class Morphologicals(QDialog):
 
         # Lay out the UI elements
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Select blurring technique:"))
+        layout.addWidget(QLabel("Select Morphological technique:"))
         layout.addWidget(self.comboBox)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
@@ -242,6 +242,65 @@ class Morphologicals(QDialog):
         # Return the selected technique
         return self.comboBox.currentText()  
     
+class CompressionDialog(QDialog):
+    def __init__(self, parent=None):
+        super(CompressionDialog, self).__init__(parent)
+        self.setWindowTitle("Choose Compression technique")
+        self.setFixedSize(350, 150)  # Set a fixed size for the dialog
+
+        # Create the UI elements
+        self.comboBox = QComboBox()
+        self.comboBox.addItems(["Lossy", "Lossless"])
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0, 100)
+        self.slider.setValue(50)
+        self.slider.valueChanged.connect(self.sliderValueChanged)
+        self.compressionLevelLabel = QLabel('Compression Level: 50')
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.close)  # Connect the rejected signal to the close slot of the dialog
+
+        # Lay out the UI elements
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Select Compression technique:"))
+        layout.addWidget(self.comboBox)
+        layout.addWidget(self.compressionLevelLabel)
+        layout.addWidget(self.slider)
+        layout.addWidget(self.buttonBox)
+        self.setLayout(layout)
+
+    def getSelectedTechnique(self):
+        # Return the selected technique
+        return self.comboBox.currentText()
+
+    def sliderValueChanged(self):
+        value = self.slider.value()
+        self.compressionLevelLabel.setText(f'Compression Level: {value}')
+
+
+class BlendingDialog(QDialog):
+    def __init__(self, parent=None):
+        super(BlendingDialog, self).__init__(parent)
+        self.setWindowTitle("Choose:")
+        self.setFixedSize(300, 100)  # Set a fixed size for the dialog
+
+        # Create the UI elements
+        self.comboBox = QComboBox()
+        self.comboBox.addItems(["Equal size", "Different size"])
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.close)  # Connect the rejected signal to the close slot of the dialog
+
+        # Lay out the UI elements
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Select:"))
+        layout.addWidget(self.comboBox)
+        layout.addWidget(self.buttonBox)
+        self.setLayout(layout)
+
+    def getSelectedTechnique(self):
+        # Return the selected technique
+        return self.comboBox.currentText()
 class MainApp(QMainWindow):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
@@ -255,8 +314,8 @@ class MainApp(QMainWindow):
         self.draw_rectangle.clicked.connect(self.before_draw_rectangle)
         self.gray_scale.clicked.connect(self.gray_scale_function)
         self.hsv.clicked.connect(self.hsv_function)
-        self.blend2imgs.clicked.connect(self.blend2imgs_function)
-        self.blending_diff_size.clicked.connect(self.blending_diff_size_function)
+        # self.blend2imgs.clicked.connect(self.blend2imgs_function)
+        # self.blending_diff_size.clicked.connect(self.blending_diff_size_function)
         self.threshold.clicked.connect(self.threshold_function)
         self.brightness.clicked.connect(self.brightness_function)
         self.put_text.clicked.connect(self.put_text_function)
@@ -266,6 +325,8 @@ class MainApp(QMainWindow):
         self.feature_matching.clicked.connect(self.feature_matching_function)
         self.draw_circle.clicked.connect(self.before_draw_circle)
         self.morphological.clicked.connect(self.morphological_fn)
+        self.compression.clicked.connect(self.compression_function)
+        self.blending.clicked.connect(self.blending_images)
         
     def before_resize_function(self):
         img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
@@ -626,8 +687,61 @@ class MainApp(QMainWindow):
         ax2.axis('off')
         plt.tight_layout()
         plt.show()
-        
-    def blend2imgs_function(self):
+    
+    def compression_function(self):
+        # Get the path of the image file
+        img_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if not img_path:
+            return
+
+        # Load the image
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # # Define the default compression level
+        # compression_level = 50
+
+        # Create a CompressionDialog and get the selected technique and compression level
+        dialog = CompressionDialog(self)
+      
+        if dialog.exec_() == QDialog.Accepted:
+            # Apply the selected Compression technique
+            technique = dialog.getSelectedTechnique()
+            compression_level = dialog.slider.value()
+            if technique == "Lossy":
+                # Encode the image using JPEG compression with the selected compression level
+                encoded_image = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), compression_level])[1]
+
+                # Decode the compressed image
+                decoded_image = cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
+            elif technique == "Lossless":
+
+                # Encode the image using PNG compression
+                success, encoded_image = cv2.imencode('.png', img, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+                # Decode the compressed image
+                decoded_image = cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
+        else:
+            # User pressed "Cancel", don't perform anything
+            return
+
+        # Get the size of each image in KB
+        input_size = os.path.getsize(img_path) // 1024
+        compressed_size = len(encoded_image) // 1024
+
+        # Display the input and compressed images with titles
+        plt.figure(figsize=(12, 8))
+        plt.subplot(1, 2, 1)
+        plt.imshow(img)
+        plt.title(f"Input Image ({input_size} KB)")
+        plt.subplot(1, 2, 2)
+        plt.imshow(decoded_image)
+        plt.title(f"Compressed Image ({compressed_size} KB)")
+        plt.tight_layout()
+        plt.show()
+
+
+    def blending_images(self):
         # Get the path of the image file
         img1_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
         if not img1_path:
@@ -646,90 +760,75 @@ class MainApp(QMainWindow):
         img2 = cv2.imread(img2_path)
         img2 = cv2.cvtColor(img2,cv2.COLOR_BGR2RGB)
         
-        # shapes = [(img1.shape[0],img1.shape[1]),(img2.shape[0],img2.shape[1])]
-        # max_size = max(shapes, key=lambda x: x[0]*x[1])
+        dialog = BlendingDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            # Apply the selected blurring technique
+            technique = dialog.getSelectedTechnique()
+            if technique == "Equal size":
+                # easy to blend if they are equal sizes otherwise it will be a bit trickier
+                img1 = cv2.resize(img1,(1200,1200))
+                img2 = cv2.resize(img2,(1200,1200))
+                blended = cv2.addWeighted(img1,0.91,img2,0.1,0)   
+                
+                fig, (ax1, ax2,ax3) = plt.subplots(1, 3, figsize=(10, 6))
+                ax1.imshow(img1)
+                ax1.set_title('Image 1')
+                ax2.imshow(img2)
+                ax2.set_title('Image 2')
+                ax3.imshow(blended)
+                ax3.set_title('Result')
+                ax1.axis('off')
+                ax2.axis('off')
+                plt.tight_layout()
+                plt.show()
+            elif technique == "Different size":
+                # size = (int(img2.shape[0] / 2),int(img2.shape[1] / 2))
+                img2 = cv2.resize(img2,(600,600))
+                x_offset = img1.shape[1] - img2.shape[1]
+                y_offset = img1.shape[0] - img2.shape[0]
+                rows,cols,channels = img2.shape
+                roi = img1[y_offset:img1.shape[0],x_offset:img1.shape[1]]
+                
+                img2gray = cv2.cvtColor(img2,cv2.COLOR_RGB2GRAY)
+                mask_inv = cv2.bitwise_not(img2gray)
+                fg = (cv2.bitwise_or(img2,img2,mask=mask_inv))
+                
+                final_roi = cv2.bitwise_or(roi,fg)
+                large_img = img1
+                small_img = final_roi
+                img1[y_offset:img1.shape[0],x_offset:img1.shape[1]] = small_img
+                # fig, (ax1, ax2,ax3,ax4,ax5,ax6,ax7) = plt.subplots(nrows=2,ncols=4 , figsize=(10, 5))
+                plt.figure(figsize=(10, 5))
+                plt.subplot(2,4,1)
+                plt.imshow(img1)
+                plt.title('Image 1')
+                plt.subplot(2,4,2)
+                plt.imshow(img2)
+                plt.title('Image 2')
+                plt.subplot(2,4,3)
+                plt.imshow(img2gray,'gray')
+                plt.title('Image 2 gray')
+                
+                plt.subplot(2,4,4)
+                plt.imshow(mask_inv,cmap = 'gray')
+                plt.title('Image 2 after bitwise not')
+                plt.subplot(2,4,5)
+                plt.imshow(fg,cmap = 'gray')
+                plt.title('Image 2 after bitwise or (with not masking)')
+                plt.subplot(2,4,6)
+                plt.imshow(roi)
+                plt.title('Image 1 ROI')
+                plt.subplot(2,4,7)
+                plt.imshow(img1)
+                plt.title('Final ROI')
+                plt.tight_layout()
+                plt.show()
+            
+        else:
+            # User pressed "Cancel", don't perform any blurring
+            return
         
-        # easy to blend if they are equal sizes otherwise it will be a bit trickier
-        img1 = cv2.resize(img1,(1200,1200))
-        img2 = cv2.resize(img2,(1200,1200))
-        blended = cv2.addWeighted(img1,0.91,img2,0.1,0)   
-        
-        fig, (ax1, ax2,ax3) = plt.subplots(1, 3, figsize=(10, 6))
-        ax1.imshow(img1)
-        ax1.set_title('Image 1')
-        ax2.imshow(img2)
-        ax2.set_title('Image 2')
-        ax3.imshow(blended)
-        ax3.set_title('Result')
-        ax1.axis('off')
-        ax2.axis('off')
-        plt.tight_layout()
-        plt.show()
     
-    def blending_diff_size_function(self):
-        try:
-                # Get the path of the image file
-            img1_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
-            if not img1_path:
-                return
-
-            # Load the image
-            img1 = cv2.imread(img1_path)
-            img1 = cv2.cvtColor(img1,cv2.COLOR_BGR2RGB)
-            
-            # Get the path of the image file
-            img2_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
-            if not img2_path:
-                return
-
-            # Load the image
-            img2 = cv2.imread(img2_path)
-            img2 = cv2.cvtColor(img2,cv2.COLOR_BGR2RGB)
-            # size = (int(img2.shape[0] / 2),int(img2.shape[1] / 2))
-            img2 = cv2.resize(img2,(600,600))
-            x_offset = img1.shape[1] - img2.shape[1]
-            y_offset = img1.shape[0] - img2.shape[0]
-            rows,cols,channels = img2.shape
-            roi = img1[y_offset:img1.shape[0],x_offset:img1.shape[1]]
-            
-            img2gray = cv2.cvtColor(img2,cv2.COLOR_RGB2GRAY)
-            mask_inv = cv2.bitwise_not(img2gray)
-            fg = (cv2.bitwise_or(img2,img2,mask=mask_inv))
-            
-            final_roi = cv2.bitwise_or(roi,fg)
-            large_img = img1
-            small_img = final_roi
-            img1[y_offset:img1.shape[0],x_offset:img1.shape[1]] = small_img
-            # fig, (ax1, ax2,ax3,ax4,ax5,ax6,ax7) = plt.subplots(nrows=2,ncols=4 , figsize=(10, 5))
-            plt.figure(figsize=(10, 5))
-            plt.subplot(2,4,1)
-            plt.imshow(img1)
-            plt.title('Image 1')
-            plt.subplot(2,4,2)
-            plt.imshow(img2)
-            plt.title('Image 2')
-            plt.subplot(2,4,3)
-            plt.imshow(img2gray,'gray')
-            plt.title('Image 2 gray')
-            
-            plt.subplot(2,4,4)
-            plt.imshow(mask_inv,cmap = 'gray')
-            plt.title('Image 2 after bitwise not')
-            plt.subplot(2,4,5)
-            plt.imshow(fg,cmap = 'gray')
-            plt.title('Image 2 after bitwise or (with not masking)')
-            plt.subplot(2,4,6)
-            plt.imshow(roi)
-            plt.title('Image 1 ROI')
-            plt.subplot(2,4,7)
-            plt.imshow(img1)
-            plt.title('Final ROI')
-            plt.tight_layout()
-            plt.show()
-        except:
-            # plt.title('Raised Error',fontsize = 25,c = 'red')
-            plt.text(0.1,0.53, "Raised Error",fontsize =  44,color = 'red')
-            plt.show()
 
     
 
@@ -1451,9 +1550,10 @@ class MainApp(QMainWindow):
 
         # Get the color for the rectangle
         if color == "Blue":
-            rect_color = (255, 0, 0)  # Blue
+            rect_color = (0, 0, 255)
+              # Blue
         elif color == "Red":
-            rect_color = (0, 0, 255)  # Red
+            rect_color = (255, 0, 0) # Red
         elif color == "White":
             rect_color = (255, 255, 255)  # White
         elif color == "Green":
@@ -1476,7 +1576,6 @@ class MainApp(QMainWindow):
 
         # Show the image
         plt.imshow(rect_img)
-        plt.axis('off')
         plt.show()
         
     def circle_on_white_board(self):
